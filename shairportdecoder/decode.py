@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 import xml.etree.ElementTree as xml
 from DictObject import DictObject
-from luckydonaldUtils.files import open_file_folder
+from luckydonaldUtils.files import open_file_folder, guess_extension
 from luckydonaldUtils.encoding import to_unicode, to_binary
 from luckydonaldUtils.xml import etree_to_dict
 
@@ -15,7 +15,7 @@ from base64 import decodebytes, encodebytes
 from datetime import datetime
 
 import tempfile  # write cover image to temp file
-
+import magic
 
 
 
@@ -35,7 +35,7 @@ class Infos(object):
 		self.volume = None					# float/double, from 0-1. This is the real Volume. Shairport does logarithmically scaling of the airplay value. (Python2 has a `double` type, too, not sure which you get there.)
 		self.playstate = None				# Enum: Infos.PLAYING, Infos.STOPPED
 		self.useragent = None  				# unicode, e.g. iTunes/12.2 (Macintosh; OS X 10.9.5)
-		self.songcoverart = None			# bytes, the actual file bytes.
+		self.songcoverart = CoverArt()			# CoverArt, (with bytes, base64, mime and stuff)
 		self.airplayvolume = None			# float, from 0-1. This is linear what the client sends. (Python2 has a `double` type, too, not sure which you get there.)
 
 
@@ -88,7 +88,7 @@ class Infos(object):
 	def write_cover_file(self):
 		temp_file = tempfile.NamedTemporaryFile(prefix="image_", suffix=".png", delete=False)
 		with temp_file as file:
-			file.write(self.songcoverart)  # this is not base64!
+			file.write(self.songcoverart.binary)  # this is not base64!
 		return temp_file
 
 	def to_simple_string(self):
@@ -100,6 +100,52 @@ class Infos(object):
 		"""
 		return (self.itemname if self.itemname else "Unknown Track") + ((" - " + self.songartist) if self.songartist else "") + (("\n" + self.songalbum) if self.songalbum else "")
 
+class CoverArt(object):
+	def __init__(self, base64=None, binary=None, mime=None, extension=None):
+		self._binary = binary  # the actual file bytes
+		self._base64 = base64  # base64 encoding
+		self._mime	 = mime    # e.g. "image/png"
+		self._extension = extension # e.g. ".png"
+
+	def as_dict(self, base64=False):
+		data_dict = {
+			"mime": self.mime,
+			"extension": self.extension,
+			}
+		if base64:
+			data_dict["base64"] = self.base64
+		return data_dict
+
+	@property
+	def base64(self):
+		if self._base64:
+			return self._base64
+		if self._binary:
+			self._base64 = encodebytes(to_binary(self._binary))
+			return self._base64
+		else:
+			return None
+
+	@property
+	def binary(self):
+		if self._binary:
+			return self._binary
+
+	@property
+	def mime(self):
+		if self._mime:
+			return self._mime
+		if self.binary:
+			#self._mime = magic.from_buffer(memoryview(self.binary), mime=True).decode("utf-8")
+			self._mime = magic.from_buffer(self.binary, mime=True).decode("utf-8")
+			return self._mime
+		else:
+			return None
+
+	@property
+	def extension(self):
+		self._extension = guess_extension(self.mime)
+		return self._extension
 
 class Item(object):
 	def __init__(self, e):

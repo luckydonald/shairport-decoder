@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from luckydonaldUtils.encoding import unicode_type
-from shairportdecoder.decode import Infos, Item, logger
+from shairportdecoder.decode import Infos, Item, logger, CoverArt
 
 __author__ = 'luckydonald'
 
@@ -44,7 +44,7 @@ class Processor(object):
 			return
 		if item.type == "ssnc":
 			if item.code == "PICT":  # the payload is a picture, either a JPEG or a PNG. Check the first few bytes to see which.
-				self.info.songcoverart = item.data  # this is not base64, but raw.
+				self.info.songcoverart = CoverArt(binary=item.data, base64=item.data_base64)  # this is not base64, but raw.
 				self._trigger_update_event(COVERART)
 			elif item.code == "mdst":  # -- a sequence of metadata is about to start
 				self.info = Infos()
