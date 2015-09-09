@@ -49,21 +49,45 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			msg = "YO!"
 			print(self.path)
 			self.do_write_text(msg)
+
+		elif self.path.endswith("/cover.img.json"):
+			msg = json_dump(self.info.songcoverart.as_dict(True))
+			self.do_write_text(msg)
 			return
+
+		elif self.path.endswith("/cover.json"):
+			msg = json_dump(self.info.songcoverart.as_dict())
+			self.do_write_text(msg)
+			return
+
 		elif self.path.endswith("/cover.png"):
 			cover = self.info.songcoverart
-			if cover:
-				self.do_write_text(cover, content_type="image/png", is_binary=True)
-			else:
-				self.send_response(404)
+			if cover.mime == "image/jpeg":
+				self.send_response(307)
+				self.send_header("Location", "cover.jpg")
 				self.end_headers()
+				return
+			if cover:
+				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
+			self.do_write_default_cover_png()
+
 		elif self.path.endswith("/cover.jpg"):
 			cover = self.info.songcoverart
-			if cover:
-				self.do_write_text(cover, content_type="image/jpeg", is_binary=True)
-			else:
-				self.send_response(404)
+			if cover.mime == "image/png":
+				self.send_response(307)
+				self.send_header("Location", "cover.png")
 				self.end_headers()
+				return
+			if cover:
+				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
+			self.do_write_default_cover_jpg()
+
+		elif self.path.endswith("/cover.img"):
+			cover = self.info.songcoverart
+			if cover:
+				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
+			self.do_write_default_cover_jpg()
+
 		elif self.path.endswith("/volume.json"):
 			msg = json_dump({"info": "volume", "software": self.info.volume, "airplay": self.info.airplayvolume})
 			self.do_write_text(msg)
@@ -103,10 +127,22 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 		return path
 	#end def
 
+	def do_write_default_cover_png(self):
+		self.send_response(404)
+		self.end_headers()
+
+	def do_write_default_cover_jpg(self):
+		self.send_response(404)
+		self.end_headers()
+
 	def do_write_text(self, msg, content_type="text/plain", is_binary=False):
 		# Now do servery stuff.
 		if not is_binary:
 			msg = to_binary(msg)
+		if msg is None:
+			self.send_response(404)
+			self.end_headers()
+			return
 		self.send_response(200)
 		self.send_header("Content-type", content_type)
 		self.send_header("Content-Length", str(len(msg)))
@@ -128,7 +164,7 @@ class http_shairport_server(Processor):
 		self.run_processor()
 
 	def run_processor(self):
-		self.add_listener(event_processor)  # function `event_processor` defined bellow.
+		#self.add_listener(event_processor)  # function `event_processor` defined bellow.
 		self.parse(self.pipe_file)  # this will probably run forever.
 
 
