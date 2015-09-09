@@ -7,6 +7,9 @@ __author__ = 'luckydonald'
 from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
+VERSION = "0.1"
+
+
 
 class Processor(object):
 
@@ -225,9 +228,9 @@ class Processor(object):
 		:param function: The function added with `add_listener(func)` before.
 		"""
 		self._listeners.remove(function)
-
-
 #end class
+
+# because py2 doesn't have Enums... :(
 VOLUME = "volume"
 META = "meta"
 COVERART = "coverart"
