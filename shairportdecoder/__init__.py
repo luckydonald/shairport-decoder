@@ -37,10 +37,8 @@ class Processor(object):
 			return
 		#print("{type}, {code}".format(type = item.type, code = item.code))
 		if item.type == "ssnc":
-			if item.code == "pfls":  # play stream flush.
-				pass
-			elif item.code == "PICT":  # the payload is a picture, either a JPEG or a PNG. Check the first few bytes to see which.
-				self.info.songcoverart = item.data
+			if item.code == "PICT":  # the payload is a picture, either a JPEG or a PNG. Check the first few bytes to see which.
+				self.info.songcoverart = item.data  # this is not base64, but raw.
 				self._trigger_update_event(COVERART)
 			elif item.code == "mdst":  # -- a sequence of metadata is about to start
 				self.info = Infos()
@@ -158,6 +156,12 @@ class Processor(object):
 				self.info.songalbumid = item.data_int
 			elif item.code == "askd":  # -- daap.songlastskipdate
 				self.info.songlastskipdate = item.data_date
+			elif item.code == "assn":  # -- daap.sortname
+				self.info.sortname = item.data_str
+			elif item.code == "assu":  # -- daap.sortalbum
+				self.info.sortalbum = item.data_str
+
+
 			elif item.code == "aeNV":  # -- com.apple.itunes.norm-volume
 				self.info.itunesnormvolume = item.data_int
 			elif item.code == "aePC":  # -- com.apple.itunes.is-podcast
@@ -227,23 +231,3 @@ class Processor(object):
 VOLUME = "volume"
 META = "meta"
 COVERART = "coverart"
-
-
-def default_event_processor(event_type, info):
-	"""
-	This you can use to put into `add_listener(func)`.
-	It will then print the events.
-	:param event_type:
-	:param info:
-	:return:
-	"""
-	assert(isinstance(info, Infos))
-	if event_type == VOLUME:
-		print("Changed Volume to {vol}.".format(vol = info.volume))
-	elif event_type == COVERART:
-		cover_file = info.write_cover_file()
-		print("Got Coverart, wrote it to {file} .".format(file = cover_file))
-	elif event_type == META:
-		print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
-	#end if "switch event_type"
-#end def

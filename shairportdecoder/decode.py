@@ -29,10 +29,15 @@ class Infos(object):
 		self.itemname = None  				# unicode, the actual song title, e.g. "Chapter 9"  -- Yes, I am using an audiobook to test. lol.
 		self.persistentid = None  			# int
 
+		self.sortname = None				# unicode, equal to the song's name (?)
+		self.sortalbum = None  				# unicode, equal to the song's name (?)
+
 		self.volume = None					# int, from 0-100. This is the real Volume. Shairport does logarithmically scaling of the airplay value.
 		self.playstate = None				# Enum: Infos.PLAYING, Infos.STOPPED
 		self.useragent = None  				# unicode, e.g. iTunes/12.2 (Macintosh; OS X 10.9.5)
+		self.songcoverart = None			# bytes, the actual file bytes.
 		self.airplayvolume = None			# int, from 0-100. This is linear what the client sends.
+
 
 		self.songsize = None				# int
 		self.songyear = None  				# int
@@ -48,7 +53,6 @@ class Infos(object):
 		self.songdatakind = None  			# int, 1 = RADIO_STREAM, 0/2 = DAAP_STREAM ???
 		self.songartistid = None  			# int, probably. I guess a persistent artist id? like self.persistentid ? -- http://git.io/vZJeg
 		self.songdisabled = None  			# bool
-		self.songcoverart = None			# bytes
 		self.songcomposer = None			# unicode
 		self.songeqpreset = None			# unicode
 		self.songgrouping = None  			# unicode, ??
@@ -84,7 +88,7 @@ class Infos(object):
 	def write_cover_file(self):
 		temp_file = tempfile.NamedTemporaryFile(prefix="image_", suffix=".png", delete=False)
 		with temp_file as file:
-			file.write()
+			file.write(self.songcoverart)  # this is not base64!
 		return temp_file
 
 	def to_simple_string(self):
@@ -110,6 +114,7 @@ class Item(object):
 		if isinstance(e, dict):
 			e = DictObject.objectify(e)
 		assert isinstance(e, DictObject)
+		assert hasattr(e.item, "type")
 		self.type = ascii_integers_to_string(e.item.type)
 		self.code = ascii_integers_to_string(e.item.code)
 		self.length = int(e.item.length)
@@ -172,8 +177,3 @@ def encoded_to_str(data, encoding, as_bytes=True):
 	else:
 		raise AttributeError("unknown encoding format: {f}".format(f=encoding))
 
-
-
-
-if __name__ == "__main__":
-	main(None)
