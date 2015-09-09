@@ -24,7 +24,7 @@ def main(argv):
 		filename = "/tmp/shairport-sync-metadata"
 	processor = Processor()
 	processor.add_listener(event_processor)  # function `event_processor` defined bellow.
-	processor.parse(filename)
+	processor.parse(filename)  # this will probably* run forever. (* If it doesn't crash, lol)
 
 #end def main
 
