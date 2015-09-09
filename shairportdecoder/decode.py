@@ -32,11 +32,11 @@ class Infos(object):
 		self.sortname = None				# unicode, equal to the song's name (?)
 		self.sortalbum = None  				# unicode, equal to the song's name (?)
 
-		self.volume = None					# int, from 0-100. This is the real Volume. Shairport does logarithmically scaling of the airplay value.
+		self.volume = None					# float/double, from 0-1. This is the real Volume. Shairport does logarithmically scaling of the airplay value. (Python2 has a `double` type, too, not sure which you get there.)
 		self.playstate = None				# Enum: Infos.PLAYING, Infos.STOPPED
 		self.useragent = None  				# unicode, e.g. iTunes/12.2 (Macintosh; OS X 10.9.5)
 		self.songcoverart = None			# bytes, the actual file bytes.
-		self.airplayvolume = None			# int, from 0-100. This is linear what the client sends.
+		self.airplayvolume = None			# float, from 0-1. This is linear what the client sends. (Python2 has a `double` type, too, not sure which you get there.)
 
 
 		self.songsize = None				# int

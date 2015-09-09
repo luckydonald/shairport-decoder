@@ -63,13 +63,13 @@ class Processor(object):
 				# and is from 0.00 down to -30.00, with -144.00 meaning "mute".
 				# This is linear on the volume control slider of iTunes or iOS AirPlay.
 				airplay_volume, volume, lowest_volume, highest_volume = tuple([float(i) for i in item.data_str.split(',')])
-				self.info.volume = -1 if airplay_volume == -144 else (volume - (lowest_volume)) / (-1* (lowest_volume - highest_volume))
-				self.info.airplayvolume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30) * 100
+				self.info.volume = -1 if airplay_volume == -144 else ((volume - (lowest_volume)) / (-1* (lowest_volume - highest_volume)))
+				self.info.airplayvolume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30)
 				self._trigger_update_event(VOLUME)
 			elif item.code in ["prgr", "daid"]:
-				logger.warn("KNOWN unknown shairport-sync (ssnc) code \"{code}\", with data {data}.".format(code=item.code, data=item.data_base64))
+				logger.warn("Found (already familiar) unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}. Any Idea what that means?".format(code=item.code, data=item.data_base64))
 			else:
-				logger.warn("Unknown shairport-sync (ssnc) code \"{code}\", with data {data}.".format(code=item.code, data=item.data_base64))
+				logger.warn("Unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}.".format(code=item.code, data=item.data_base64))
 				#raise AttributeError("Unknown shairport-sync (ssnc) code \"{code}\", got data {data}.".format(code=item.code, data=item.data_base64))
 		elif item.type == "core":  # -- dmap.itemkind
 			if item.code == "mikd":  # -- the kind of item.  So far, only '2' has been seen, an audio
@@ -179,7 +179,7 @@ class Processor(object):
 				self.info.itunesepisodenumstr = item.data_str
 
 			elif item.code in ["meia", "meip"]:
-				logger.warn("KNOWN unknown DMAP-core code: {code}, with data {data}.".format(code=item.code, data=item.data_base64))
+				logger.warn("Found (already familiar) unknown DMAP-core code: {code}, with base64 data {data}. Any Idea what that means?".format(code=item.code, data=item.data_base64))
 			else:
 				logger.warn("Unknown DMAP-core code: {code}, with data {data}.".format(code=item.code, data=item.data_base64))
 				#raise AttributeError("Unknown DMAP (core) code \"{code}\", data is {data}".format(code=item.code, data=item.data_base64))
