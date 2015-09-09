@@ -5,18 +5,23 @@ from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
 
-filename = '/Users/tasso/Downloads/covershit.xml'
+filename = '/Users/luckydonald/Downloads/covershit.xml'
 filename = "/tmp/shairport-sync-metadata"
 #filename = "/tmp/dumpf.foorb"
 
 import xml.etree.ElementTree as xml
 from DictObject import DictObject
 from luckydonaldUtils.files import open_file_folder
+from luckydonaldUtils.encoding import to_unicode, to_binary, unicode_type
+from luckydonaldUtils.xml import etree_to_dict
+
 from base64 import decodebytes, encodebytes
 from datetime import datetime
 
-
 import sys  # launch arguments
+import tempfile  # write cover image to temp file
+
+
 
 def main(argv):
 	if argv is None:
@@ -36,28 +41,6 @@ def main(argv):
 
 #end def main
 
-
-## -- http://stackoverflow.com/a/10077069
-from collections import defaultdict
-def etree_to_dict(t):
-	d = {t.tag: {} if t.attrib else None}
-	children = list(t)
-	if children:
-		dd = defaultdict(list)
-		for dc in map(etree_to_dict, children):
-			for k, v in dc.items():
-				dd[k].append(v)
-		d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.items()}}
-	if t.attrib:
-		d[t.tag].update(('@' + k, v) for k, v in t.attrib.items())
-	if t.text:
-		text = t.text.strip()
-		if children or t.attrib:
-			if text:
-				d[t.tag]['#text'] = text
-		else:
-			d[t.tag] = text
-	return d
 
 
 class Foo(object):
@@ -95,20 +78,18 @@ class Foo(object):
 				self.info.playstate = Infos.PLAYING
 			elif item.code == "pend":  # -- play stream end. No arguments
 				self.info.playstate = Infos.STOPPED
-			elif item.code == "pvol":  # -- -- play volume. The volume is sent as a string
-				"""
-				"airplay_volume,volume,lowest_volume,highest_volume",
-				where "volume", "lowest_volume" and "highest_volume" are given in dB.
-				The "airplay_volume" is what's sent by the source (e.g. iTunes) to the player,
-				and is from 0.00 down to -30.00, with -144.00 meaning "mute".
-				This is linear on the volume control slider of iTunes or iOS AirPlay.
-				"""
+			elif item.code == "pvol":  # -- play volume. The volume is sent as a string
+				# "airplay_volume,volume,lowest_volume,highest_volume",
+				# where "volume", "lowest_volume" and "highest_volume" are given in dB.
+				# The "airplay_volume" is what's sent by the source (e.g. iTunes) to the player,
+				# and is from 0.00 down to -30.00, with -144.00 meaning "mute".
+				# This is linear on the volume control slider of iTunes or iOS AirPlay.
 				airplay_volume, volume, lowest_volume, highest_volume = tuple([float(i) for i in item.data_str.split(',')])
 				print(self.info.volume)
 				self.info.volume = -1 if airplay_volume == -144 else (volume - (lowest_volume)) / (-1* (lowest_volume - highest_volume))
-				self.info.airplay_volume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30) * 100
+				self.info.airplayvolume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30) * 100
 			elif item.code in ["prgr", "daid"]:
-				logger.warn("Known unknown shairport-sync (ssnc) code \"{code}\", with data {data}.".format(code=item.code, data=item.data_base64))
+				logger.warn("KNOWN unknown shairport-sync (ssnc) code \"{code}\", with data {data}.".format(code=item.code, data=item.data_base64))
 			else:
 				logger.warn("Unknown shairport-sync (ssnc) code \"{code}\", with data {data}.".format(code=item.code, data=item.data_base64))
 				#raise AttributeError("Unknown shairport-sync (ssnc) code \"{code}\", got data {data}.".format(code=item.code, data=item.data_base64))
@@ -215,7 +196,7 @@ class Foo(object):
 				self.info.itunesepisodenumstr = item.data_str
 
 			elif item.code in ["meia", "meip"]:
-				logger.warn("Known unknown DMAP-core code: {code}, with data {data}.".format(code=item.code, data=item.data_base64))
+				logger.warn("KNOWN unknown DMAP-core code: {code}, with data {data}.".format(code=item.code, data=item.data_base64))
 			else:
 				logger.warn("Unknown DMAP-core code: {code}, with data {data}.".format(code=item.code, data=item.data_base64))
 				#raise AttributeError("Unknown DMAP (core) code \"{code}\", data is {data}".format(code=item.code, data=item.data_base64))
@@ -236,7 +217,6 @@ class Foo(object):
 
 
 
-import tempfile
 
 class Infos(object):
 	PLAYING = "playing"
@@ -248,9 +228,10 @@ class Infos(object):
 		self.itemname = None  				# unicode, the actual song title, e.g. "Chapter 9"  -- Yes, I am using an audiobook to test. lol.
 		self.persistentid = None  			# int
 
-		self.volume = None					
+		self.volume = None					# int, from 0-100. This is the real Volume. Shairport does logarithmically scaling of the airplay value.
 		self.playstate = None				# Enum: Infos.PLAYING, Infos.STOPPED
 		self.useragent = None  				# unicode, e.g. iTunes/12.2 (Macintosh; OS X 10.9.5)
+		self.airplayvolume = None			# int, from 0-100. This is linear what the client sends.
 
 		self.songsize = None				# int
 		self.songyear = None  				# int
@@ -382,9 +363,6 @@ def ascii_integers_to_string(string, base=16, digits_per_char=2):
 
 def data_string_decode(e, as_bytes=True):
 	return encoded_to_str(e.item.data["#text"], e.item.data["@encoding"], as_bytes=as_bytes)
-
-from luckydonaldUtils.encoding import to_unicode, to_binary, unicode_type
-
 
 def encoded_to_str(data, encoding, as_bytes=True):
 	if encoding == "base64":
