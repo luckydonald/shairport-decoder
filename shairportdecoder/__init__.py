@@ -39,6 +39,9 @@ class Processor(object):
 		if item is None:
 			return
 		#print("{type}, {code}".format(type = item.type, code = item.code))
+		if not hasattr(item, "type"):
+			logger.warn("Got typeless (malformed) data!")
+			return
 		if item.type == "ssnc":
 			if item.code == "PICT":  # the payload is a picture, either a JPEG or a PNG. Check the first few bytes to see which.
 				self.info.songcoverart = item.data  # this is not base64, but raw.
