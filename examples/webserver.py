@@ -25,6 +25,7 @@ except ImportError:  # py3
 	from socketserver import TCPServer
 #end try
 
+from datetime import datetime  # check if isinstance date for encoding json
 from os import path # locate script folder
 import os.path
 from json import dumps as json_dump
@@ -92,10 +93,15 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			msg = json_dump({"info": "volume", "software": self.info.volume, "airplay": self.info.airplayvolume})
 			self.do_write_text(msg)
 		elif self.path.endswith("/meta.json"):
-			if py2:
-				meta_dict = { key: value for key, value in self.info.__dict__.iteritems() if key != "songcoverart"}  # untested for py2
-			else:
-				meta_dict = { key: value for key, value in self.info.__dict__.items() if key != "songcoverart"}
+			skiplist = ["songcoverart"]
+			meta_dict = {}
+			for key, value in self.info.__dict__.items():  # this eats memory on python 2
+				if key in skiplist:
+					continue
+				if isinstance(value, datetime):
+					meta_dict[key] = str(value.isoformat())
+				else:
+					meta_dict[key] = value
 			msg = json_dump(meta_dict)
 			self.do_write_text(msg)
 		elif self.path.endswith("/text"):
@@ -207,6 +213,8 @@ def event_processor(event_type, info):
 		print("Got Coverart.")
 	elif event_type == shairportdecoder.META:
 		print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
+	elif event_type == shairportdecoder.META_START:
+		print("Started Meta block")
 	#end if "switch event_type"
 #end def
 
