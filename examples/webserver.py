@@ -45,6 +45,12 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 		return self.server.processor.info
 
 	def do_GET(self):
+		parts = self.path.split("?", maxsplit=1)
+		self.path = parts[0]
+		if len(parts)>1:
+			self.query = parts[1]
+		else:
+			self.query = None
 		logger.info("Hit {url}".format(url=self.path))
 		if self.path == "/":
 			msg = "YO!"
