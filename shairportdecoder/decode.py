@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from hashlib import sha256
+
 __author__ = 'luckydonald'
 
 from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
@@ -21,6 +23,7 @@ import magic
 
 class Infos(object):
 	PLAYING = "playing"
+	PAUSE = "paused"
 	STOPPED = "stopped"
 
 	def __init__(self):
@@ -35,7 +38,7 @@ class Infos(object):
 		self.volume = None					# float/double, from 0-1. This is the real Volume. Shairport does logarithmically scaling of the airplay value. (Python2 has a `double` type, too, not sure which you get there.)
 		self.playstate = None				# Enum: Infos.PLAYING, Infos.STOPPED
 		self.useragent = None  				# unicode, e.g. iTunes/12.2 (Macintosh; OS X 10.9.5)
-		self.songcoverart = CoverArt()			# CoverArt, (with bytes, base64, mime and stuff)
+		self.songcoverart = CoverArt()		# CoverArt, (with bytes, base64, mime and stuff)
 		self.airplayvolume = None			# float, from 0-1. This is linear what the client sends. (Python2 has a `double` type, too, not sure which you get there.)
 
 		self.songsize = None				# int
@@ -100,20 +103,12 @@ class Infos(object):
 		return (self.itemname if self.itemname else "Unknown Track") + ((" - " + self.songartist) if self.songartist else "") + (("\n" + self.songalbum) if self.songalbum else "")
 
 class CoverArt(object):
-	def __init__(self, base64=None, binary=None, mime=None, extension=None):
+	def __init__(self, base64=None, binary=None, mime=None, extension=None, checksum=None):
 		self._binary = binary  # the actual file bytes
 		self._base64 = base64  # base64 encoding
 		self._mime	 = mime    # e.g. "image/png"
 		self._extension = extension # e.g. ".png"
-
-	def as_dict(self, base64=False):
-		data_dict = {
-			"mime": self.mime,
-			"extension": self.extension,
-			}
-		if base64:
-			data_dict["base64"] = self.base64
-		return data_dict
+		self._checksum = checksum  # sha256 of binary
 
 	@property
 	def base64(self):
@@ -145,6 +140,27 @@ class CoverArt(object):
 	def extension(self):
 		self._extension = guess_extension(self.mime)
 		return self._extension
+
+	@property
+	def checksum(self):
+		if self._checksum:
+			return self._checksum
+		if self.binary:
+			self._checksum = sha256(self.binary).hexdigest()
+			return self._checksum
+		else:  # self.binary is None
+			return None
+
+	def as_dict(self, base64=False):
+		data_dict = {
+			"mime": self.mime,
+			"extension": self.extension,
+			"checksum": self.checksum,
+			}
+		if base64:
+			data_dict["base64"] = self.base64
+		return data_dict
+
 
 class Item(object):
 	def __init__(self, e):
