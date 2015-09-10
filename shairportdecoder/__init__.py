@@ -40,22 +40,26 @@ class Processor(object):
 			return
 		#print("{type}, {code}".format(type = item.type, code = item.code))
 		if not hasattr(item, "type"):
-			logger.warn("Got typeless (malformed) data!")
+			logger.warn("Got typeless (malformed) data: >>{data}<<".format(data=line))
 			return
 		if item.type == "ssnc":
 			if item.code == "PICT":  # the payload is a picture, either a JPEG or a PNG. Check the first few bytes to see which.
 				self.info.songcoverart = CoverArt(binary=item.data, base64=item.data_base64)  # this is not base64, but raw.
 				self._trigger_update_event(COVERART)
 			elif item.code == "mdst":  # -- a sequence of metadata is about to start
-				self.info = Infos()
+				self._trigger_update_event(META_START)
+				#
 			elif item.code == "snua":  # -- for example: iTunes/12.2 (Macintosh; OS X 10.9.5)
 				self.info.useragent = item.data_str
 			elif item.code == "mden":  # -- a sequence of metadata has ended
 				assert(self.info is not None)
 				self._trigger_update_event(META)
-			elif item.code == "pbeg":  # -- play stream begin. No arguments
-				self.info.playstate = Infos.PLAYING
-			elif item.code == "prsm":  # -- play stream resume. No arguments
+			elif item.code == "pbeg":  # -- play stream begin. Means someone connected? ("prsm" will be send on playing)  No arguments
+				self.info = Infos()  # reset infos
+				print("PBEG!")  # see https://github.com/mikebrady/shairport-sync-metadata-reader/issues/5
+			elif item.code == "pfls":  # -- pause stream. No arguments(?)
+				self.info.playstate = Infos.PAUSE
+			elif item.code == "prsm":  # -- play stream start/resume. No arguments
 				self.info.playstate = Infos.PLAYING
 			elif item.code == "pend":  # -- play stream end. No arguments
 				self.info.playstate = Infos.STOPPED
@@ -84,6 +88,7 @@ class Processor(object):
 				self.info.persistentid = item.data_int
 			elif item.code == "miid":  # -- dmap.itemid
 				self.info.itemid = item.data_int
+
 
 			elif item.code == "asal":  # -- daap.songalbum
 				self.info.songalbum = item.data_str
@@ -181,6 +186,7 @@ class Processor(object):
 			elif item.code == "aeEN":  # -- com.apple.itunes.episode-num-str
 				self.info.itunesepisodenumstr = item.data_str
 
+
 			elif item.code in ["meia", "meip"]:
 				logger.warn("Found (already familiar) unknown DMAP-core code: {code}, with base64 data {data}. Any Idea what that means?".format(code=item.code, data=item.data_base64))
 			else:
@@ -235,5 +241,6 @@ class Processor(object):
 
 # because py2 doesn't have Enums... :(
 VOLUME = "volume"
-META = "meta"
+META = "meta end"
+META_START = "meta start"
 COVERART = "coverart"
