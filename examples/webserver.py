@@ -164,7 +164,7 @@ class http_shairport_server(Processor):
 		self.run_processor()
 
 	def run_processor(self):
-		#self.add_listener(event_processor)  # function `event_processor` defined bellow.
+		self.add_listener(event_processor)  # function `event_processor` defined bellow.
 		self.parse(self.pipe_file)  # this will probably run forever.
 
 
@@ -204,8 +204,7 @@ def event_processor(event_type, info):
 	if event_type == shairportdecoder.VOLUME:
 		print("Changed Volume to {vol}.".format(vol = info.volume))
 	elif event_type == shairportdecoder.COVERART:
-		cover_file = info.write_cover_file().name
-		print("Got Coverart, wrote it to {file} .".format(file = cover_file))
+		print("Got Coverart.")
 	elif event_type == shairportdecoder.META:
 		print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
 	#end if "switch event_type"
