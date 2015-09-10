@@ -38,7 +38,6 @@ class Infos(object):
 		self.songcoverart = CoverArt()			# CoverArt, (with bytes, base64, mime and stuff)
 		self.airplayvolume = None			# float, from 0-1. This is linear what the client sends. (Python2 has a `double` type, too, not sure which you get there.)
 
-
 		self.songsize = None				# int
 		self.songyear = None  				# int
 		self.songtime = None  				# int, in ms
