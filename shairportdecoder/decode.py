@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-from hashlib import sha256
-
-__author__ = 'luckydonald'
+# __author__ = 'luckydonald'
 
 from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
-
+from hashlib import sha256
 import xml.etree.ElementTree as xml
 from DictObject import DictObject
 from luckydonaldUtils.files import open_file_folder, guess_extension
 from luckydonaldUtils.encoding import to_unicode, to_binary
 from luckydonaldUtils.xml import etree_to_dict
-from luckydonaldUtils import py2
+from luckydonaldUtils import py2, py3
+
 if py2:
 	from base64 import decodestring as decodebytes
 	from base64 import encodestring as encodebytes
@@ -199,7 +198,11 @@ class Item(object):
 
 	@property
 	def data_int(self):
-		return int("0x" + ''.join([hex(x)[2:] for x in self.data]), base=16)
+		if self.data:
+			if py3:
+				return int("0x" + ''.join([hex(x)[2:] for x in self.data]), base=16)
+			else:
+				return int("0x" + ''.join([hex(ord(x))[2:] for x in a]), base=16)
 
 	@property
 	def data_date(self):
