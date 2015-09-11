@@ -1,11 +1,14 @@
 <html>
     <head>
         <meta http-equiv="refresh" content="5; URL=info_noscript.html">
+        <title>Airplay</title>
     </head>
 <body>
 Currently playing:<br>
-<iframe src= "/text" style="height: 50px; width: 500px;"></iframe><br>
-<img src="/cover.img" />
+<iframe src= "/text" style="height: 50px; width: 500px; border: 0px; overflow:hidden;" border="0px" scrolling="no"></iframe><br>
+<object data="/cover.png" type="image/png" style="height: 500px; width: 500px;">
+    <img src="/img/no_cover_loaded.png"  style="height: 500px; width: 500px;"/>
+</object>
 <script>
     setTimeout(function(){
    window.location.reload(1);
