@@ -12,14 +12,18 @@ from DictObject import DictObject
 from luckydonaldUtils.files import open_file_folder, guess_extension
 from luckydonaldUtils.encoding import to_unicode, to_binary
 from luckydonaldUtils.xml import etree_to_dict
-
-from base64 import decodebytes, encodebytes
+from luckydonaldUtils import py2
+if py2:
+	from base64 import decodestring as decodebytes
+	from base64 import encodestring as encodebytes
+else:
+	from base64 import decodebytes, encodebytes
 from datetime import datetime
 
 import tempfile  # write cover image to temp file
 import magic
 
-
+decodebytes()
 
 class Infos(object):
 	PLAYING = "playing"
