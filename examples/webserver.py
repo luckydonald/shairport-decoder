@@ -7,7 +7,7 @@ from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
 from luckydonaldUtils.encoding import to_binary
-from luckydonaldUtils import py2, py3
+from luckydonaldUtils import py3
 from luckydonaldUtils import dependencies
 dependencies.import_or_install("PIL", "Pillow")
 
@@ -16,17 +16,12 @@ from shairportdecoder import Processor
 from shairportdecoder.decode import Infos
 import shairportdecoder
 
-
-try:  #py2
-	from SimpleHTTPServer import SimpleHTTPRequestHandler
-except ImportError:  # py3
-	from http.server import SimpleHTTPRequestHandler
-#end try
-try:  #py2
-	from SocketServer import TCPServer
-except ImportError:  # py3
+if py3:
 	from socketserver import TCPServer
-#end try
+	from http.server import SimpleHTTPRequestHandler
+else:
+	from SimpleHTTPServer import SimpleHTTPRequestHandler
+	from SocketServer import TCPServer
 
 from datetime import datetime  # check if isinstance date for encoding json
 from os import path # locate script folder
@@ -41,6 +36,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			super(MyHTTPRequestHandler, self).__init__(request, client_address, server)
 		else:
 			SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+
 	@property
 	def info(self):
 		"""
@@ -84,7 +80,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
 			self.do_write_default_cover_png()
 
-		elif self.path.endswith("/cover.jpg"):
+		elif self.path.endswith("/cover.jpg") or self.path.endswith("/cover.jpe") or self.path.endswith("/cover.jpeg"):
 			cover = self.info.songcoverart
 			if not cover or cover.mime == "image/png":
 				self.send_response(307)
@@ -136,7 +132,10 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 	def translate_path(self, path):
 		if os.path.exists(path):
 			return path
-		path = super(MyHTTPRequestHandler, self).translate_path(path)
+		if py3:
+			super(MyHTTPRequestHandler, self).translate_path(path)
+		else:
+			SimpleHTTPRequestHandler.translate_path(self, path)
 		#half = int(len(path)/2)
 		#if path.startswith("/") and len(path) % 2 == 0 and path[half:] == path[:half]:
 		#	return path[half:]

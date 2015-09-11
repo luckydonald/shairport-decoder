@@ -202,7 +202,7 @@ class Item(object):
 			if py3:
 				return int("0x" + ''.join([hex(x)[2:] for x in self.data]), base=16)
 			else:
-				return int("0x" + ''.join([hex(ord(x))[2:] for x in a]), base=16)
+				return int("0x" + ''.join([hex(ord(x))[2:] for x in self.data]), base=16)
 
 	@property
 	def data_date(self):
