@@ -14,7 +14,7 @@ VERSION = "0.1"
 class Processor(object):
 
 	def __init__(self):
-		super().__init__()
+		super(Processor, self).__init__()
 		self._listeners = []
 		self.info = Infos()
 
