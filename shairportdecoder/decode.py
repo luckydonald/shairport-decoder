@@ -23,8 +23,6 @@ from datetime import datetime
 import tempfile  # write cover image to temp file
 import magic
 
-decodebytes()
-
 class Infos(object):
 	PLAYING = "playing"
 	PAUSE = "paused"
