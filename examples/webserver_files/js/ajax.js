@@ -1,11 +1,5 @@
 /* FUNCTIONS BLOCK START */
 
-function $(id){
-    return document.getElementById(id);
-}
-
-
-
 function loadJSON(url, callback){
     var http_request = new XMLHttpRequest();
     try{
@@ -38,7 +32,7 @@ function loadJSON(url, callback){
           // be accessed as jsonObj.name and jsonObj.country.
           callback(jsonObj)
        }
-    }
+    };
 
     http_request.open("GET", url, true);
     http_request.send();

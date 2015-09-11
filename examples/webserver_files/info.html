@@ -1,13 +1,22 @@
 <html>
     <head>
         <title>LOLWAT</title>
+        <script src="js/lib/color-thief.js"></script>
+        <script src="js/init.js"></script>
         <script src="js/ajax.js"></script>
-        <script src="js/do_stuff.js"></script>
+        <script src="js/functions.js"></script>
+        <script src="js/interface.js"></script>
+        <script src="js/metadata.js"></script>
+        <link  href="css/style.css" rel="stylesheet" type="text/css" />
     </head>
 <body>
-Currently playing:<br>
+<div id="imageoverlay" class="overlay" onclick="dezoomImage()" class="hcenter" unselectable="on">
+    <img id="overlayimage" onclick="dezoomImage()" src="/img/no_cover_loaded.png" class="hcenter" />
+</div>
+
+<h1>Currently playing:</h1>
 <br>
-<img id="cover" src="/img/no_cover_loaded.png"/>
+<img id="coverimage" class="cover" src="/img/no_cover_loaded.png"  onclick="zoomImage()"/>
 <div class="meta">
     <div class="row">
         <span id="name" class="field">Name</span>
