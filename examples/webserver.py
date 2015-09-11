@@ -7,7 +7,10 @@ from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
 from luckydonaldUtils.encoding import to_binary
-from luckydonaldUtils import py2
+from luckydonaldUtils import py2, py3
+from luckydonaldUtils import dependencies
+dependencies.import_or_install("PIL", "Pillow")
+
 
 from shairportdecoder import Processor
 from shairportdecoder.decode import Infos
@@ -34,7 +37,10 @@ logger.info("Dir with static files should be at {path}.".format(path=folder))
 
 class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 	def __init__(self, request, client_address, server):
-		super().__init__(request, client_address, server)
+		if py3:
+			super(MyHTTPRequestHandler, self).__init__(request, client_address, server)
+		else:
+			SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 	@property
 	def info(self):
 		"""
@@ -45,7 +51,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 		return self.server.processor.info
 
 	def do_GET(self):
-		parts = self.path.split("?", maxsplit=1)
+		parts = self.path.split("?", 1) #py3: self.path.split("?", maxsplit=1)
 		self.path = parts[0]
 		if len(parts)>1:
 			self.query = parts[1]
@@ -69,25 +75,23 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 		elif self.path.endswith("/cover.png"):
 			cover = self.info.songcoverart
-			if cover.mime == "image/jpeg":
-				self.send_response(307)
-				self.send_header("Location", "cover.jpg")
-				self.end_headers()
-				return
 			if cover:
+				if cover.mime == "image/jpeg":
+					self.send_response(307)
+					self.send_header("Location", "cover.jpg")
+					self.end_headers()
+					return
 				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
 			self.do_write_default_cover_png()
 
 		elif self.path.endswith("/cover.jpg"):
 			cover = self.info.songcoverart
-			if cover.mime == "image/png":
+			if not cover or cover.mime == "image/png":
 				self.send_response(307)
 				self.send_header("Location", "cover.png")
 				self.end_headers()
 				return
-			if cover:
-				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
-			self.do_write_default_cover_jpg()
+			return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
 
 		elif self.path.endswith("/cover.img"):
 			cover = self.info.songcoverart
@@ -140,12 +144,15 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 	#end def
 
 	def do_write_default_cover_png(self):
+		with open(os.path.join(os.path.join(folder,"img"),"no_cover.png")) as cover:
+			msg = cover.read()
+			self.do_write_text(msg)
+			self.send_response(200)
+			self.end_headers()
+			return
 		self.send_response(404)
 		self.end_headers()
-
-	def do_write_default_cover_jpg(self):
-		self.send_response(404)
-		self.end_headers()
+		return
 
 	def do_write_text(self, msg, content_type="text/plain", is_binary=False):
 		# Now do servery stuff.
@@ -171,7 +178,8 @@ class http_shairport_server(Processor):
 		self.pipe_file = pipe_file
 
 	def run(self):
-		thread = Thread(target=self.run_server, daemon=True)
+		thread = Thread(target=self.run_server)
+		thread.daemon = True
 		thread.start()
 		self.run_processor()
 
