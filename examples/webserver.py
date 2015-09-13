@@ -63,9 +63,9 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			self.query = parts[1]
 		else:
 			self.query = None
-		logger.info("Hit {url}".format(url=self.path))
+		logger.debug("Hit {url}".format(url=self.path))
 		if self.path == "/":
-			msg = "YO!"
+			msg = "YO!\n<a href=\"info.html\">Ajax Interface</a><br /><a href=\"info_noscript.html\">No-Script Interface</a>"
 			print(self.path)
 			self.do_write_text(msg)
 
@@ -204,7 +204,7 @@ class http_shairport_server(Processor):
 	def run_server(self):
 		handler = MyHTTPRequestHandler
 		httpd = TCPServer(("", self.port), handler)
-		print("HTTP> Starting serving at port {port}.".format(port=self.port))
+		logger.info("Starting serving web interface at port {port}.".format(port=self.port))
 		httpd.processor = self
 		httpd.serve_forever()
 
@@ -213,7 +213,6 @@ class http_shairport_server(Processor):
 
 
 import sys  # launch arguments
-
 def main(argv):
 	if argv is None or not argv:
 		argv = sys.argv[1:]
@@ -221,6 +220,7 @@ def main(argv):
 		pipe_file = argv[0]
 	else:
 		pipe_file = "/tmp/shairport-sync-metadata"
+	logging.add_colored_handler(level=logging.INFO)
 	server = http_shairport_server(8080, pipe_file)
 	server.run()
 
