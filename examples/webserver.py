@@ -31,6 +31,16 @@ folder = path.join(path.dirname(path.realpath(__file__)), (path.basename(__file_
 logger.info("Dir with static files should be at {path}.".format(path=folder))
 
 class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
+
+	def log_message(self, format, *args):
+		logger.info("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), format%args))
+
+	def log_request(self, code='-', size='-'):
+		logger.debug('%s - - "%s" %s %s', self.client_address[0], self.requestline, str(code), str(size))
+
+	def log_error(self, format, *args):
+		logger.error("%s - - %s" % (self.client_address[0], format%args))
+
 	def __init__(self, request, client_address, server):
 		if py3:
 			super(MyHTTPRequestHandler, self).__init__(request, client_address, server)
@@ -93,7 +103,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			cover = self.info.songcoverart
 			if cover:
 				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
-			self.do_write_default_cover_jpg()
+			self.do_write_default_cover_png()
 
 		elif self.path.endswith("/volume.json"):
 			msg = json_dump({"info": "volume", "software": self.info.volume, "airplay": self.info.airplayvolume})
@@ -143,14 +153,18 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 	#end def
 
 	def do_write_default_cover_png(self):
-		with open(os.path.join(os.path.join(folder,"img"),"no_cover.png")) as cover:
+		try:
+			cover = open(os.path.join(os.path.join(folder,"img"),"no_cover.png"))
 			msg = cover.read()
+			cover.close()
 			self.do_write_text(msg)
 			self.send_response(200)
 			self.end_headers()
 			return
-		self.send_response(404)
-		self.end_headers()
+		except Exception as e:
+			self.send_response(404)
+			self.do_write_text("Default Cover Exception: \"" + e.message + "\"")
+			self.end_headers()
 		return
 
 	def do_write_text(self, msg, content_type="text/plain", is_binary=False):
