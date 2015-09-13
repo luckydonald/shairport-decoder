@@ -17,6 +17,7 @@ class Processor(object):
 		super(Processor, self).__init__()
 		self._listeners = []
 		self.info = Infos()
+		self.do_quit = False
 
 	# core code reference: (until google code goes finally offline :/ )
 	# http://ios5-tutorial.googlecode.com/svn/trunk/OutSourcing/OnlineAudio/%E7%BD%91%E7%BB%9C%E7%94%B5%E5%8F%B0/ReferCode/nto-AirSpeaker/AirTunes/DMAP.m
@@ -24,15 +25,18 @@ class Processor(object):
 	def parse(self, filename="/tmp/shairport-sync-metadata"):
 		logger.info("Parsing named pipe: {filename}".format(filename=filename))
 		temp_line = ""
-		with open(filename) as f:
-			for line in f:
-				if not line.strip().endswith("</item>"):
-					temp_line += line.strip()
-					continue
-				line = temp_line + line
-				temp_line = ""
-				#print(line)
-				self.process_line(line)
+		while not (self.do_quit):
+			with open(filename) as f:
+				for line in f:
+					if not line.strip().endswith("</item>"):
+						temp_line += line.strip()
+						continue
+					line = temp_line + line
+					temp_line = ""
+					#print(line)
+					self.process_line(line)
+					if self.do_quit:
+						break
 
 	def process_line(self, line):
 		item = Item(line)
@@ -73,7 +77,7 @@ class Processor(object):
 				self.info.volume = -1 if airplay_volume == -144 else ((volume - (lowest_volume)) / (-1* (lowest_volume - highest_volume)))
 				self.info.airplayvolume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30)
 				self._trigger_update_event(VOLUME)
-			elif item.code in ["prgr", "daid"]:
+			elif item.code in ["prgr", "daid", "acre"]:
 				logger.warn("Found (already familiar) unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}. Any Idea what that means?".format(code=item.code, data=item.data_base64))
 			else:
 				logger.warn("Unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}.".format(code=item.code, data=item.data_base64))
