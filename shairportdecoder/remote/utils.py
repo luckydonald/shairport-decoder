@@ -41,5 +41,8 @@ class ServiceListener(object):
 
 	def add_service(self, zeroconf, type, name):
 		info = zeroconf.get_service_info(type, name)
-		self.info = info
-		print("Service %s added, service info: %s" % (name, info))
+		if name == self.expected_name:
+			self.info = info
+			logger.success("Found Airplay remote client: {name}, {data}".format(name=name, data=info))
+		else:
+			logger.debug("Wrong Airplay Service %s found, service info: %s" % (name, info))

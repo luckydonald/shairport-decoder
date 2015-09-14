@@ -77,7 +77,13 @@ class Processor(object):
 				self.info.volume = -1 if airplay_volume == -144 else ((volume - (lowest_volume)) / (-1* (lowest_volume - highest_volume)))
 				self.info.airplayvolume = -1 if airplay_volume == -144 else ((airplay_volume + 30) / 30)
 				self._trigger_update_event(VOLUME)
-			elif item.code in ["prgr", "daid", "acre"]:
+			elif item.code == "daid":  # -- DACP-ID
+				self.info.dacp_id = item.data_str
+				self._check_remote()
+			elif item.code == "acre":  # -- Active-Remote
+				self.info.active_remote = item.data_str
+				self._check_remote()
+			elif item.code in ["prgr"]:
 				logger.warn("Found (already familiar) unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}. Any Idea what that means?".format(code=item.code, data=item.data_base64))
 			else:
 				logger.warn("Unknown shairport-sync core (ssnc) code \"{code}\", with base64 data {data}.".format(code=item.code, data=item.data_base64))
@@ -241,6 +247,13 @@ class Processor(object):
 		:param function: The function added with `add_listener(func)` before.
 		"""
 		self._listeners.remove(function)
+
+	def _check_remote(self):
+		if self.info.dacp_id is not None and self.info.active_remote is not None:
+			logger.debug("DACP Remote client available.")
+			self._trigger_update_event(CLIENT_REMOTE_AVAILABLE)
+
+
 #end class
 
 # because py2 doesn't have Enums... :(
@@ -248,3 +261,4 @@ VOLUME = "volume"
 META = "meta end"
 META_START = "meta start"
 COVERART = "coverart"
+CLIENT_REMOTE_AVAILABLE = "client remote available"

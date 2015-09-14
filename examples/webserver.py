@@ -13,6 +13,7 @@ dependencies.import_or_install("PIL", "Pillow")
 
 
 from shairportdecoder import Processor
+from shairportdecoder.remote import AirplayRemote
 from shairportdecoder.decode import Infos
 import shairportdecoder
 
@@ -125,6 +126,9 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			msg = self.info.to_simple_string()
 			self.do_write_text(msg)
 			return
+		elif self.path.endswith("/debug_breakpoint"):
+			self.do_write_text("This is a debug line with an breakpoint added in PyCharm.")
+			pass
 		else:
 			self.path = folder + self.path  #  e.g. localhost/123/foo.bar -> /path/to/script/webserver_files/123/foo.bar
 			logger.debug("Requested file {file}".format(file = self.path))
@@ -189,6 +193,7 @@ class http_shairport_server(Processor):
 		super(http_shairport_server, self).__init__()
 		self.port = port
 		self.pipe_file = pipe_file
+		self.remote = None
 
 	def run(self):
 		thread = Thread(target=self.run_server)
@@ -197,7 +202,7 @@ class http_shairport_server(Processor):
 		self.run_processor()
 
 	def run_processor(self):
-		self.add_listener(event_processor)  # function `event_processor` defined bellow.
+		self.add_listener(self.event_processor)  # function `event_processor` defined bellow.
 		self.parse(self.pipe_file)  # this will probably run forever.
 
 
@@ -208,6 +213,27 @@ class http_shairport_server(Processor):
 		httpd.processor = self
 		httpd.serve_forever()
 
+	def event_processor(self, event_type, info):
+		"""
+		This you can use to put into `add_listener(func)`.
+		It will then print the events.
+		:param event_type:
+		:param info:
+		:return:
+		"""
+		assert(isinstance(info, Infos))
+		if event_type == shairportdecoder.VOLUME:
+			print("Changed Volume to {vol}.".format(vol = info.volume))
+		elif event_type == shairportdecoder.COVERART:
+			print("Got Coverart.")
+		elif event_type == shairportdecoder.META:
+			print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
+		elif event_type == shairportdecoder.META_START:
+			print("Started Meta block")
+		elif event_type == shairportdecoder.CLIENT_REMOTE_AVAILABLE:
+			self.remote = AirplayRemote.from_dacp_id(self.info.dacp_id, self.info.active_remote)
+		#end if "switch event_type"
+	#end def
 
 
 
@@ -225,25 +251,7 @@ def main(argv):
 	server.run()
 
 
-def event_processor(event_type, info):
-	"""
-	This you can use to put into `add_listener(func)`.
-	It will then print the events.
-	:param event_type:
-	:param info:
-	:return:
-	"""
-	assert(isinstance(info, Infos))
-	if event_type == shairportdecoder.VOLUME:
-		print("Changed Volume to {vol}.".format(vol = info.volume))
-	elif event_type == shairportdecoder.COVERART:
-		print("Got Coverart.")
-	elif event_type == shairportdecoder.META:
-		print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
-	elif event_type == shairportdecoder.META_START:
-		print("Started Meta block")
-	#end if "switch event_type"
-#end def
+
 
 
 if __name__ == "__main__":

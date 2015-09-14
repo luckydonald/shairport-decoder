@@ -14,7 +14,7 @@ zeroconf = import_or_install("zeroconf", "zeroconf")
 from zeroconf import ServiceBrowser, Zeroconf
 
 airplay_zeroconf_service = "_dacp._tcp.local."  # local?
-airplay_prefix = "iTunes_Ctrl_{token}"
+airplay_prefix = "iTunes_Ctrl_{dacp_id}"
 base_url = "{host}:{port}/ctrl-int/1/{command}"
 
 
@@ -31,10 +31,10 @@ class AirplayRemote(object):
 		self.port = port
 
 	@classmethod
-	def from_token(cls, token):
+	def from_dacp_id(cls, dacp_id, token):
 		zeroconf = Zeroconf()
 		try:
-			listener = ServiceListener(airplay_prefix.format(token=token), zeroconf)
+			listener = ServiceListener(airplay_prefix.format(dacp_id=dacp_id), zeroconf)
 			browser = ServiceBrowser(zeroconf, airplay_zeroconf_service, listener)
 			wait_for_it = ResultWaiter(listener, browser)
 			wait_for_it.start()
@@ -152,8 +152,8 @@ import sys  # launch arguments
 def main(argv):
 	if argv is None:
 		argv = sys.argv
-	return "THIS IS AN EXAMPLE, EDIT THE TOKEN. ELSE IT WILL NOT TERMINATE. WHY AM I WRITING CAPSLOCK?"
-	example = AirplayRemote.from_token(token="1595DA80A46BF32B")
+	return "THIS IS AN EXAMPLE, EDIT THE DACP-ID. ELSE IT WILL NOT TERMINATE. WHY AM I WRITING CAPSLOCK?"
+	example = AirplayRemote.from_dacp_id(dacp_id="1595DA80A46BF32B", token="todo: example here")
 	example.volume_down()
 
 
