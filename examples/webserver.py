@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from threading import Thread
-from PIL import Image
-
 __author__ = 'luckydonald'
 
 from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
@@ -10,10 +7,15 @@ logger = logging.getLogger(__name__)
 from luckydonaldUtils.encoding import to_binary
 from luckydonaldUtils import py3
 from luckydonaldUtils import dependencies
-dependencies.import_or_install("PIL", "Pillow")
 from luckydonaldUtils.images.color import most_frequent_color
+
+dependencies.import_or_install("PIL", "Pillow")
+from PIL import Image
+
 dependencies.import_or_install("webbrowser")
 import webbrowser
+
+from threading import Thread
 
 from shairportdecoder.remote import AirplayRemote
 from shairportdecoder.metadata import Infos
