@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import shairportdecoder.decoder
+
 __author__ = 'luckydonald'
 
 from luckydonaldUtils.logger import logging  # pip install luckydonald-utils
 logger = logging.getLogger(__name__)
 
-from shairportdecoder import Processor
-from shairportdecoder.decode import Infos
-import shairportdecoder
+from shairportdecoder.decoder import Processor
+from shairportdecoder.metadata import Infos
+from shairportdecoder import decoder
 
 import sys  # launch arguments
 
@@ -38,12 +40,12 @@ def event_processor(event_type, info):
 	:return:
 	"""
 	assert(isinstance(info, Infos))
-	if event_type == shairportdecoder.VOLUME:
+	if event_type == decoder.VOLUME:
 		print("Changed Volume to {vol}.".format(vol = info.volume))
-	elif event_type == shairportdecoder.COVERART:
+	elif event_type == decoder.COVERART:
 		cover_file = info.write_cover_file().name
 		print("Got Coverart, wrote it to {file} .".format(file = cover_file))
-	elif event_type == shairportdecoder.META:
+	elif event_type == decoder.META:
 		print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
 	#end if "switch event_type"
 #end def

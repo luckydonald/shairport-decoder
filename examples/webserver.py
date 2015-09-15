@@ -15,10 +15,10 @@ from luckydonaldUtils.images.color import most_frequent_color
 dependencies.import_or_install("webbrowser")
 import webbrowser
 
-from shairportdecoder import Processor
 from shairportdecoder.remote import AirplayRemote
-from shairportdecoder.decode import Infos
-import shairportdecoder
+from shairportdecoder.metadata import Infos
+from shairportdecoder import decoder
+from shairportdecoder.decoder import Processor
 
 if py3:
 	from socketserver import TCPServer
@@ -245,15 +245,15 @@ class http_shairport_server(Processor):
 		:return:
 		"""
 		assert(isinstance(info, Infos))
-		if event_type == shairportdecoder.VOLUME:
+		if event_type == decoder.VOLUME:
 			print("Changed Volume to {vol}.".format(vol = info.volume))
-		elif event_type == shairportdecoder.COVERART:
+		elif event_type == decoder.COVERART:
 			print("Got Coverart.")
-		elif event_type == shairportdecoder.META:
+		elif event_type == decoder.META:
 			print("Got Metadata,\n{meata}".format(meata=info.to_simple_string())) # lol, meat typo.
-		elif event_type == shairportdecoder.META_START:
+		elif event_type == decoder.META_START:
 			print("Started Meta block")
-		elif event_type == shairportdecoder.CLIENT_REMOTE_AVAILABLE:
+		elif event_type == decoder.CLIENT_REMOTE_AVAILABLE:
 			print("Got Airplay Remote informations.")
 			self.remote = AirplayRemote.from_dacp_id(self.info.dacp_id, self.info.active_remote)
 		#end if "switch event_type"
