@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from threading import Thread
+from PIL import Image
 
 __author__ = 'luckydonald'
 
@@ -10,7 +11,9 @@ from luckydonaldUtils.encoding import to_binary
 from luckydonaldUtils import py3
 from luckydonaldUtils import dependencies
 dependencies.import_or_install("PIL", "Pillow")
-
+from luckydonaldUtils.images.color import most_frequent_color
+dependencies.import_or_install("webbrowser")
+import webbrowser
 
 from shairportdecoder import Processor
 from shairportdecoder.remote import AirplayRemote
@@ -27,6 +30,8 @@ else:
 from datetime import datetime  # check if isinstance date for encoding json
 from os import path # locate script folder
 import os.path
+from io import BytesIO # coverart to PIL.open
+
 from json import dumps as json_dump
 folder = path.join(path.dirname(path.realpath(__file__)), (path.basename(__file__).split(".")[0] + "_files"))
 logger.info("Dir with static files should be at {path}.".format(path=folder))
@@ -66,15 +71,31 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			self.query = None
 		logger.debug("Hit {url}".format(url=self.path))
 		if self.path == "/":
-			msg = "YO!\n<a href=\"info.html\">Ajax Interface</a><br /><a href=\"info_noscript.html\">No-Script Interface</a>"
-			print(self.path)
+			msg = """<html><head>    <title>OMG PONIES!</title>    </head><body>
+			<h1>YO!</h1>
+			<a href="info.html">Ajax Interface</a><br />
+			<a href="info_noscript.html">No-Script Interface</a><br />
+			</body></html>"""
 			self.do_write_text(msg)
-
+			return
 		elif self.path.endswith("/cover.img.json"):
 			msg = json_dump(self.info.songcoverart.as_dict(True))
 			self.do_write_text(msg)
 			return
-
+		elif self.path.endswith("/cover.color.json"):
+			def rgb_to_array(r, g, b):
+				return {"r": r, "g": g, "b": b}
+			def color_result_to_array(img):
+				return rgb_to_array(color[1][0],color[1][1],color[1][2])
+			if not self.info.songcoverart.binary:
+				meta_dict = {"colors": [rgb_to_array(0,0,0),rgb_to_array(255,255,255), rgb_to_array(255,255,255)]}
+			else:
+				img = Image.open(BytesIO(self.info.songcoverart.binary))
+				colors = most_frequent_color(img, colors=3)
+				meta_dict = {"colors": list([color_result_to_array(color) for color in colors])}
+			msg = json_dump(meta_dict)
+			self.do_write_text(msg)
+			return
 		elif self.path.endswith("/cover.json"):
 			msg = json_dump(self.info.songcoverart.as_dict())
 			self.do_write_text(msg)
@@ -89,7 +110,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 					self.end_headers()
 					return
 				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
-			self.do_write_default_cover_png()
+			return self.do_write_default_cover_png()
 
 		elif self.path.endswith("/cover.jpg") or self.path.endswith("/cover.jpe") or self.path.endswith("/cover.jpeg"):
 			cover = self.info.songcoverart
@@ -105,7 +126,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			if cover:
 				return self.do_write_text(cover.binary, content_type=cover.mime, is_binary=True)
 			self.do_write_default_cover_png()
-
+			return
 		elif self.path.endswith("/volume.json"):
 			msg = json_dump({"info": "volume", "software": self.info.volume, "airplay": self.info.airplayvolume})
 			self.do_write_text(msg)
@@ -121,6 +142,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 					meta_dict[key] = value
 			msg = json_dump(meta_dict)
 			self.do_write_text(msg)
+			return
 		elif self.path.endswith("/text"):
 			assert isinstance(self.info, Infos)
 			msg = self.info.to_simple_string()
@@ -128,7 +150,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			return
 		elif self.path.endswith("/debug_breakpoint"):
 			self.do_write_text("This is a debug line with an breakpoint added in PyCharm.")
-			pass
+			return
 		else:
 			self.path = folder + self.path  #  e.g. localhost/123/foo.bar -> /path/to/script/webserver_files/123/foo.bar
 			logger.debug("Requested file {file}".format(file = self.path))
@@ -209,7 +231,8 @@ class http_shairport_server(Processor):
 	def run_server(self):
 		handler = MyHTTPRequestHandler
 		httpd = TCPServer(("", self.port), handler)
-		logger.info("Starting serving web interface at port {port}.".format(port=self.port))
+		webbrowser.open("http://localhost:{port}/info.html".format(port=self.port))
+		logger.info("Started serving web interface at port {port}.".format(port=self.port))
 		httpd.processor = self
 		httpd.serve_forever()
 
