@@ -231,6 +231,7 @@ class http_shairport_server(Processor):
 		elif event_type == shairportdecoder.META_START:
 			print("Started Meta block")
 		elif event_type == shairportdecoder.CLIENT_REMOTE_AVAILABLE:
+			print("Got Airplay Remote informations.")
 			self.remote = AirplayRemote.from_dacp_id(self.info.dacp_id, self.info.active_remote)
 		#end if "switch event_type"
 	#end def
