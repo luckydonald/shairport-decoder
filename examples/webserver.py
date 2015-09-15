@@ -19,6 +19,7 @@ from shairportdecoder.remote import AirplayRemote
 from shairportdecoder.metadata import Infos
 from shairportdecoder import decoder
 from shairportdecoder.decoder import Processor
+from time import sleep
 
 if py3:
 	from socketserver import TCPServer
@@ -26,6 +27,7 @@ if py3:
 else:
 	from SimpleHTTPServer import SimpleHTTPRequestHandler
 	from SocketServer import TCPServer
+from socket import error
 
 from datetime import datetime  # check if isinstance date for encoding json
 from os import path # locate script folder
@@ -230,7 +232,19 @@ class http_shairport_server(Processor):
 
 	def run_server(self):
 		handler = MyHTTPRequestHandler
-		httpd = TCPServer(("", self.port), handler)
+		#httpd = TCPServer(("", self.port), handler)
+		started = False
+		while not started:
+			try:
+				httpd = TCPServer(("", self.port), handler)
+				started = True
+			except error as e:
+				if e.errno == 48:
+					logger.warn("Starting Server failed. Address already in use. Retrying.")
+					sleep(1)
+				else:
+					raise
+
 		webbrowser.open("http://localhost:{port}/info.html".format(port=self.port))
 		logger.info("Started serving web interface at port {port}.".format(port=self.port))
 		httpd.processor = self
