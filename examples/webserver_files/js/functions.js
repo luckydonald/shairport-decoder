@@ -86,11 +86,12 @@ function getContrastYIQ_BW_rgb(r,g,b){
 }
 
 function getMinAndMaxContrastYIQ(listOfColorTriples) {
-    var min = getContrastYIQ_rgb(color.r, color.g, color.b), min_color = listOfColorTriples[0],
+    var color = listOfColorTriples[0];
+    var min = getContrastYIQ_rgb(color.r, color.g, color.b), min_color = color,
         max = min,   max_color = min_color;
-    for (var i = 1; i <= listOfColorTriples.length; i++) {
-        var color       = listOfColorTriples[i],
-            contrastYIQ = getContrastYIQ_rgb(color.r, color.g, color.b);
+    for (var i = 1; i < listOfColorTriples.length; i++) {
+        color       = listOfColorTriples[i];
+        var contrastYIQ = getContrastYIQ_rgb(color.r, color.g, color.b);
         console.log(color, contrastYIQ, min, max);
         if (contrastYIQ > max) {
             max_color = color;

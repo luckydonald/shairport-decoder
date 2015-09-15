@@ -3,6 +3,6 @@ from shairportdecoder.metadata import Infos, Item, logger, CoverArt
 from shairportdecoder.decoder import logger
 
 __author__ = 'luckydonald'
-VERSION = "0.1"
+VERSION = "0.2"
 
 

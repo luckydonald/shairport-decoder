@@ -29,8 +29,8 @@ function set_cover(jsonObj) {
         var temp_cover_url = cover_url + jsonObj.extension + "#" + new Date().getTime();
         $("#coverimage").src = temp_cover_url;
         $("#overlayimage").src = temp_cover_url;
-        loadJSON(color_json_url, set_color);
         infobuffer.coverHash = jsonObj.checksum;
+        loadJSON(color_json_url, set_color);
     }
 
 }
@@ -50,14 +50,12 @@ function set_color(jsonObj) {
     document.body.style.backgroundColor = "rgb(" + background[0]   + ","+background[1]   + "," + background[2]   + ")";
     document.body.style.color =           "rgb(" + forderground[0] + ","+forderground[1] + "," + forderground[2] + ")";
 
-    var fields = $(".field")
+    var fields = $(".field");
     for (var i = 0; i < fields.length; i++) {
         var field = fields[i];
         field.style.borderColor =           "rgb(" + forderground[0] + ","+forderground[1] + "," + forderground[2] + ")";
     }
     //.style.color =           "rgb(" + forderground[0] + ","+forderground[1] + "," + forderground[2] + ")"
-
-
 }
 
 function set_meta(jsonObj) {
