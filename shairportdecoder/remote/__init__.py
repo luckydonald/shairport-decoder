@@ -32,8 +32,9 @@ class AirplayRemote(object):
 
 	@classmethod
 	def from_dacp_id(cls, dacp_id, token):
-		zeroconf = Zeroconf()
+		zeroconf = None
 		try:
+			zeroconf = Zeroconf()
 			listener = ServiceListener(airplay_prefix.format(dacp_id=dacp_id), zeroconf)
 			browser = ServiceBrowser(zeroconf, airplay_zeroconf_service, listener)
 			wait_for_it = ResultWaiter(listener, browser)
@@ -41,7 +42,8 @@ class AirplayRemote(object):
 			wait_for_it.join()
 			del wait_for_it
 		finally:
-			zeroconf.close()
+			if zeroconf is not None:
+				zeroconf.close()
 		assert(listener.info)  # fails if service was not found.
 		host = "http://" +  binary_ip_to_str(listener.info.address)
 		port = listener.info.port
