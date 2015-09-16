@@ -52,7 +52,7 @@ setup(
 	keywords='python music airplay shairplay dmap daap music mp3 remote meta metadata display',
 	# You can just specify the packages manually here if your project is
 	# simple. Or you can use find_packages().
-	packages= ['shairportdecoder'], #find_packages(exclude=['contrib', 'docs', 'tests*']),
+	packages= ['shairportdecoder', 'shairportdecoder.remote'], #find_packages(exclude=['contrib', 'docs', 'tests*']),
 	# List run-time dependencies here. These will be installed by pip when your
 	# project is installed. For an analysis of "install_requires" vs pip's
 	# requirements files see:
