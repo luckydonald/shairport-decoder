@@ -241,7 +241,7 @@ class http_shairport_server(Processor):
 				httpd = TCPServer(("", self.port), handler)
 				started = True
 			except error as e:
-				if e.errno == 48:
+				if e.errno in [48, 98]:
 					logger.warn("Starting Server failed. Address already in use. Retrying.")
 					sleep(1)
 				else:
