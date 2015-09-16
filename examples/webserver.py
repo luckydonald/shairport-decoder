@@ -83,7 +83,7 @@ class MyHTTPRequestHandler(SimpleHTTPRequestHandler):
 			self.do_write_text(msg)
 			return
 		elif self.path.endswith("/cover.img.json"):
-			msg = json_dump(self.info.songcoverart.as_dict(True))
+			msg = json_dump(self.info.songcoverart.as_dict(base64=True))
 			self.do_write_text(msg)
 			return
 		elif self.path.endswith("/cover.color.json"):

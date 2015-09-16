@@ -1,5 +1,5 @@
 var server = "";//"/shairport-decode/examples/webserver_files/test_json"; //last one is the PyCharm debug server url. Else (default) set it to ""
-var cover_json_url = server+"/cover.json";
+var cover_json_url = server+"/cover.img.json";
 var color_json_url = server+"/cover.color.json";
 var meta_json_url = server+"/meta.json";
 var cover_url = server+"/cover"; //+".png"
@@ -26,7 +26,10 @@ function set_cover(jsonObj) {
         lol.cover = true;
     }
     if(jsonObj.checksum != infobuffer.coverHash) {
-        var temp_cover_url = cover_url + jsonObj.extension + "#" + new Date().getTime();
+        //var temp_cover_url = cover_url + jsonObj.extension + "#" + new Date().getTime();
+        var temp_cover_url = "data:image/png;base64," + jsonObj.base64;
+
+
         $("#coverimage").src = temp_cover_url;
         $("#overlayimage").src = temp_cover_url;
         infobuffer.coverHash = jsonObj.checksum;
